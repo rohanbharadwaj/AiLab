@@ -5,6 +5,7 @@
 # purposes. The Pacman AI projects were developed at UC Berkeley, primarily by
 # John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
+from duplicity.path import Path
 
 """
 In search.py, you will implement generic search algorithms which are called 
@@ -81,11 +82,45 @@ def depthFirstSearch(problem):
   print "Is the start a goal?", problem.isGoalState(problem.getStartState())
   print "Start's successors:", problem.getSuccessors(problem.getStartState())
   """
-  "*** YOUR CODE HERE ***"
-  print "Start:", problem.getStartState()
-  print "Is the start a goal?", problem.isGoalState(problem.getStartState())
-  print "Start's successors:", problem.getSuccessors(problem.getStartState())
-  util.raiseNotDefined()
+  print "the problem is ", problem
+  from game import Directions
+  from util import Stack
+  n=Directions.NORTH
+  s=Directions.SOUTH
+  e=Directions.EAST
+  w=Directions.WEST
+  explored=[]
+  frontier=Stack()
+  frontierSet=[]
+  start_node=problem.getStartState()
+  if problem.isGoalState(start_node)==True:
+    return []
+  frontier.push((start_node,[]))
+  while frontier.isEmpty()==False:
+      visit_node=frontier.pop()
+      coord=visit_node[0]
+      actions=visit_node[1]
+      if(problem.isGoalState(coord)==True):
+          print actions
+          return actions
+      explored.extend(coord)
+      successors=problem.getSuccessors(coord)
+      for successor in successors:
+          succCoord=successor[0]
+          succAction=successor[1]
+          if succCoord not in explored and succCoord not in frontierSet:
+              frontierSet.append(succCoord)
+              tempPath=list(actions)
+              if(succAction=='North'):
+                tempPath.append(n)
+              elif(succAction=='East'):
+                tempPath.append(e)
+              elif(succAction=='South'):
+                tempPath.append(s)
+              elif(succAction=='West'):
+                tempPath.append(w)
+              frontier.push((succCoord,tempPath))
+  return []            
 
 def breadthFirstSearch(problem):
   "Search the shallowest nodes in the search tree first. [p 81]"
@@ -96,6 +131,7 @@ def uniformCostSearch(problem):
   "Search the node of least total cost first. "
   "*** YOUR CODE HERE ***"
   util.raiseNotDefined()
+
 
 def nullHeuristic(state, problem=None):
   """
