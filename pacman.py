@@ -659,7 +659,9 @@ if __name__ == '__main__':
 
   > python pacman.py --help
   """
+  print sys.argv[1:]
   args = readCommand( sys.argv[1:] ) # Get game components based on input
+  #args = readCommand( ['-l', 'mediumMaze', '-p', 'SearchAgent', '-a', 'fn=ucs'] )
   runGames( **args )
 
   # import cProfile
