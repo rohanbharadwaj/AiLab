@@ -5,7 +5,7 @@
 # purposes. The Pacman AI projects were developed at UC Berkeley, primarily by
 # John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
-from duplicity.path import Path
+
 from __builtin__ import str
 
 """
@@ -97,19 +97,18 @@ def depthFirstSearch(problem):
     return []
   frontier.push((start_node,[]))
   while frontier.isEmpty()==False:
-      visit_node=frontier.pop()
-      coord=visit_node[0]
-      actions=visit_node[1]
-      if(problem.isGoalState(coord)==True):
-          print actions
+      currentNode=frontier.pop()
+      currentState=currentNode[0]
+      actions=currentNode[1]
+      if(problem.isGoalState(currentState)==True):
           return actions
-      explored.extend(coord)
-      successors=problem.getSuccessors(coord)
+      explored.extend(currentState)
+      successors=problem.getSuccessors(currentState)
       for successor in successors:
-          succCoord=successor[0]
+          succState=successor[0]
           succAction=successor[1]
-          if succCoord not in explored and succCoord not in frontierSet:
-              frontierSet.append(succCoord)
+          if succState not in explored and succState not in frontierSet:
+              frontierSet.append(succState)
               tempPath=list(actions)
               if(succAction=='North'):
                 tempPath.append(n)
@@ -119,7 +118,7 @@ def depthFirstSearch(problem):
                 tempPath.append(s)
               elif(succAction=='West'):
                 tempPath.append(w)
-              frontier.push((succCoord,tempPath))
+              frontier.push((succState,tempPath))
   return []            
 
 def breadthFirstSearch(problem):
@@ -139,19 +138,19 @@ def breadthFirstSearch(problem):
     return []
   frontier.push((start_node,[]))
   while frontier.isEmpty()==False:
-      visit_node=frontier.pop()
-      coord=visit_node[0]
-      actions=visit_node[1]
-      if(problem.isGoalState(coord)==True):
-          print actions
+      currentNode=frontier.pop()
+      currentState=currentNode[0]
+      actions=currentNode[1]
+      if(problem.isGoalState(currentState)==True):
+          #print actions
           return actions
-      explored.extend(str(coord))
-      successors=problem.getSuccessors(coord)
+      explored.append(str(currentState))
+      successors=problem.getSuccessors(currentState)
       for successor in successors:
-          succCoord=successor[0]
+          succState=successor[0]
           succAction=successor[1]
-          if succCoord not in explored and succCoord not in frontierSet:
-              frontierSet.append(str(succCoord))
+          if str(succState) not in explored and str(succState) not in frontierSet:
+              frontierSet.append(str(succState))
               tempPath=list(actions)
               if(succAction=='North'):
                 tempPath.append(n)
@@ -161,9 +160,9 @@ def breadthFirstSearch(problem):
                 tempPath.append(s)
               elif(succAction=='West'):
                 tempPath.append(w)
-              frontier.push((succCoord,tempPath))
+              frontier.push((succState,tempPath))
   return []            
-      
+     
 def uniformCostSearch(problem):
   "Search the node of least total cost first. "
   "*** YOUR CODE HERE ***"
@@ -175,28 +174,39 @@ def uniformCostSearch(problem):
   w=Directions.WEST
   explored=[]
   frontier=PriorityQueue()
-  frontierSet={}
+  frontierSet=[]
+  nodePath={}
+  gDistance={}
+  canBeExpanded={}
   dist=0 # dist = g(n)
   start_node=problem.getStartState()
+  gDistance[str(start_node)]=0
+  nodePath[str(start_node)]=[]
+  canBeExpanded[str(start_node)]=True
   if problem.isGoalState(start_node)==True:
     return []
-  frontier.push((start_node,[],dist),dist)
+  frontier.push((start_node),dist)
   while frontier.isEmpty()==False:
-      visit_node=frontier.pop()
-      parentCoord=visit_node[0] # The node to be explored
-      parentAction=visit_node[1] # Action required to reach to this node.
-      parentDistance=visit_node[2] # Distance to this node 
-      if(parentCoord in explored):
-          continue
-      if(problem.isGoalState(parentCoord)==True):
-          print parentAction
-          return parentAction
-      explored.append(str(parentCoord))
-      successors=problem.getSuccessors(parentCoord)
+      #pop the current node
+      currentNode=frontier.pop()
+      #Retrieve the current state
+      parentState=currentNode # The state to be explored
+      parentAction=nodePath[str(parentState)] # Action required to reach to this node.
+      parentDistance=gDistance[str(parentState)] # Distance to this node 
+      #if(str(parentState) in explored):
+       #   continue
+      if(str(parentState) in canBeExpanded and canBeExpanded[str(parentState)]==False):
+        continue
+      canBeExpanded[str(parentState)]=False
+      if(problem.isGoalState(parentState)==True):
+          return nodePath[str(parentState)]
+      explored.append(str(parentState))
+      successors=problem.getSuccessors(parentState)
       for successor in successors:
-          succCoord=successor[0]
+          succState=successor[0]
           succAction=successor[1]
-          succDistance=parentDistance+1
+          succCost=successor[2]
+          tentativegDistance=parentDistance+succCost
           tempPath=list(parentAction)
           if(succAction=='North'):
             tempPath.append(n)
@@ -206,19 +216,23 @@ def uniformCostSearch(problem):
             tempPath.append(s)
           elif(succAction=='West'):
             tempPath.append(w)    
-          if str(succCoord) in explored:
-              continue
-          dictkey = str(succCoord)
+       #   if str(succState) in explored:
+        #      continue
+          dictkey = str(succState)
           #print dictkey
 
-          # dictkey=','.join([succCoord[0],succCoord[1]])                
-          if dictkey in frontierSet:
-              oldDistance = frontierSet[dictkey]
-              if succDistance > oldDistance:
-                  succDistance=oldDistance
-          frontierSet[dictkey]=succDistance
-          frontier.push((succCoord,tempPath,succDistance),succDistance)
-  return []           
+          # dictkey=','.join([succState[0],succState[1]])                
+          if dictkey in frontierSet or dictkey in explored:
+              oldDistance = gDistance[dictkey]
+              if tentativegDistance >= oldDistance:
+                  continue
+          else:
+              frontierSet.append(str(succState))
+          canBeExpanded[str(parentState)]=True
+          gDistance[dictkey]=tentativegDistance
+          nodePath[dictkey]=tempPath
+          frontier.push((succState),tentativegDistance)
+  return [] 
 
 def nullHeuristic(state, problem=None):
   """
@@ -228,42 +242,84 @@ def nullHeuristic(state, problem=None):
   from searchAgents import manhattanHeuristic
   return manhattanHeuristic(state,problem)
   #return 0
-
+def getKey(value,additionalData):
+    from game import Grid
+    newValue=[]
+    costValue=""
+    for i in range(len(value)):
+        if(isinstance(value[i], Grid)):
+             foodgrid=value[i]
+             foodList = foodgrid.asList()
+             if(not additionalData):
+               for i in range(len(foodList)):
+                 additionalData.append(foodList[i])
+             for i in range(len(additionalData)):
+                 foodX=additionalData[i][0]
+                 foodY=additionalData[i][1]
+                 if  (foodX,foodY) in foodList: 
+                    costValue+='1'      
+                 else:
+                    costValue+='0'
+             newValue.append(costValue)
+        else:
+             newValue.append(value[i])
+    return tuple(newValue)      
+    
 def aStarSearch(problem, heuristic=nullHeuristic):
   "Search the node that has the lowest combined cost and heuristic first."
   "*** YOUR CODE HERE ***"
   from game import Directions   
   from util import PriorityQueue
+  import sys
   n=Directions.NORTH
   s=Directions.SOUTH
   e=Directions.EAST
   w=Directions.WEST
   explored=[]
   frontier=PriorityQueue()
-  frontierSet={}
+  frontierSet=[]
+  nodePath={}
+  gDistance={}
+  #To check for 
+  canBeExpanded={}
+  additionalData=[]
   dist=0 # dist = g(n)
   start_node=problem.getStartState()
+  startkey=getKey(start_node,additionalData)
+  gDistance[str(startkey)]=sys.maxint
+  nodePath[str(startkey)]=[]
+  canBeExpanded[str(startkey)]=True
   if problem.isGoalState(start_node)==True:
     return []
-  frontier.push((start_node,[],dist),dist)
+  frontier.push((start_node),dist)
   while frontier.isEmpty()==False:
-      visit_node=frontier.pop()
-      parentCoord=visit_node[0] # The node to be explored
-      parentAction=visit_node[1] # Action required to reach to this node.
-      parentDistance=visit_node[2] # Distance to this node 
-      if(parentCoord in explored):
-          continue
-      if(problem.isGoalState(parentCoord)==True):
-          print parentAction
-          return parentAction
-      explored.append(str(parentCoord))
-      successors=problem.getSuccessors(parentCoord)
+      #pop the current node
+      currentNode=frontier.pop()
+      #Retrieve the current state
+      parentState=currentNode # The state to be explored
+      parentStateKey=getKey(parentState,additionalData)
+    #  print parentStateKey
+      parentAction=nodePath.get(str(parentStateKey),"") # Action required to reach to this node.
+      parentDistance=gDistance.get(str(parentStateKey),0) # Distance to this node 
+      #print parentAction 
+      #print parentState[1].__dict__['data']
+      #if(parentState[0][0]==6 and parentState[0][1]==6):
+       #      print "c";
+     # if(str(parentStateKey) in explored):
+      #s    continue
+      if(str(parentStateKey) in canBeExpanded and canBeExpanded[str(parentStateKey)]==False):
+        continue
+      canBeExpanded[str(parentStateKey)]=False
+      if(problem.isGoalState(parentState)==True):
+          return nodePath[str(parentStateKey)]
+      explored.append(str(parentStateKey))
+      successors=problem.getSuccessors(parentState)
       for successor in successors:
-          succCoord=successor[0]
+          succState=successor[0]
           succAction=successor[1]
-          gDistance=parentDistance+1
-          heuristicdistance=heuristic(succCoord,problem)
-          totaldistance=gDistance+heuristicdistance
+          succCost=successor[2]
+          tentativegDistance=parentDistance+succCost
+          heuristicdistance=heuristic(succState,problem)
           tempPath=list(parentAction)
           if(succAction=='North'):
             tempPath.append(n)
@@ -273,20 +329,26 @@ def aStarSearch(problem, heuristic=nullHeuristic):
             tempPath.append(s)
           elif(succAction=='West'):
             tempPath.append(w)    
-          if str(succCoord) in explored:
-              continue
-          dictkey = str(succCoord)
+          succStateKey=getKey(succState,additionalData)
+          #if str(succStateKey) in explored:
+          #   continue
+          dictkey = str(succStateKey)
           #print dictkey
 
-          # dictkey=','.join([succCoord[0],succCoord[1]])                
-          if dictkey in frontierSet:
-              oldDistance = frontierSet[dictkey]
-              if totaldistance > oldDistance:
-                  totaldistance=oldDistance
-          frontierSet[dictkey]=totaldistance
-          frontier.push((succCoord,tempPath,totaldistance),totaldistance)
+          # dictkey=','.join([succState[0],succState[1]])                
+          if dictkey in frontierSet or dictkey in explored:
+              oldDistance = gDistance[dictkey]
+              if tentativegDistance > oldDistance:
+                  continue
+          else:
+              frontierSet.append(str(succStateKey))
+          gDistance[dictkey]=tentativegDistance
+          nodePath[dictkey]=tempPath
+          totalDistance=tentativegDistance+heuristicdistance
+          canBeExpanded[dictkey]=True
+          frontier.push((succState),totalDistance)
   return []
-    
+
   
 # Abbreviations
 bfs = breadthFirstSearch

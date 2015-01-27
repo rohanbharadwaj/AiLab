@@ -654,14 +654,13 @@ if __name__ == '__main__':
   from the command line:
 
   > python pacman.py
-
   See the usage string for more details.
 
   > python pacman.py --help
   """
   print sys.argv[1:]
   args = readCommand( sys.argv[1:] ) # Get game components based on input
-  #args = readCommand( ['-l', 'mediumMaze', '-p', 'SearchAgent', '-a', 'fn=ucs'] )
+ # args = readCommand( ['-l', 'trickySearch', '-p', 'AStarFoodSearchAgent', '-z', '0.5'] )
   runGames( **args )
 
   # import cProfile
